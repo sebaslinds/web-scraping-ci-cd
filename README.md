@@ -1,178 +1,111 @@
-# 📚 Book Analytics Dashboard
+📊 Book Analytics Dashboard
+🚀 Overview
 
-🚀 **End-to-End Data Engineering + Machine Learning Project**
+This project demonstrates an end-to-end data product built from web-scraped book data.
+It combines data engineering, analytics, and machine learning into a fully interactive dashboard.
 
----
+The application enables users to explore pricing patterns, monitor key metrics, and generate predictive insights through a streamlined interface.
 
-## 🧠 Overview
+🎯 Objective
 
-This project delivers a full **data pipeline + analytics dashboard** to analyze book pricing trends from web-scraped data.
+The goal of this project is to:
 
-It demonstrates production-ready skills in:
+Transform raw scraped data into a structured analytics layer
+Provide interactive data exploration and business-ready KPIs
+Apply machine learning to predict book prices
+Showcase a production-style data pipeline with CI/CD
+🧱 Architecture (Medallion Design)
 
-* Data Engineering (ETL pipeline)
-* Data Modeling (Bronze → Silver → Gold)
-* CI/CD automation
-* Machine Learning (price prediction)
-* Interactive Dashboard (Streamlit)
+The data pipeline follows a modern Medallion Architecture:
 
----
+Bronze → Silver → Gold
+🔹 Bronze Layer
+Raw scraped data
+Minimal processing
+Stored as-is for traceability
+🔹 Silver Layer
+Data cleaning and normalization
+Type casting (price, availability, etc.)
+Removal of inconsistencies
+🔹 Gold Layer
+Aggregated datasets
+Analytics-ready structure
+Optimized for dashboard consumption
+⚙️ Pipeline
 
-## 🏗️ Architecture
+The pipeline is fully automated and reproducible:
 
-```
-Web Scraping → Bronze → Silver → Gold → Dashboard + ML
-```
+🌐 Web scraping (books dataset)
+🧹 Data cleaning & transformation
+📦 Structured storage (CSV layers)
+🔁 CI/CD with GitHub Actions
+🚀 Deployment-ready Streamlit app
+📈 Features
+🔍 Interactive Analytics
+Dynamic filtering (price range)
+Real-time updates
+Raw data inspection
+📊 Business KPIs
+Total number of books
+Average price
+Maximum price
+Minimum price
+📉 Data Visualization
+Price distribution histogram
+Boxplot for price variability
+🤖 Machine Learning
+Linear regression model
+Predicts price from available features
+Evaluation metrics:
+MAE (Mean Absolute Error)
+R² Score
+🖥️ Dashboard
 
-### Pipeline Stages
+The dashboard is built with Streamlit and designed with a clean SaaS-style UI.
 
-| Layer  | Description                  |
-| ------ | ---------------------------- |
-| Bronze | Raw scraped data             |
-| Silver | Cleaned & structured data    |
-| Gold   | Aggregated analytics dataset |
+Key components:
+KPI cards (fully responsive)
+Interactive charts (Plotly)
+Data table with export option
+Refresh mechanism with caching
+ML metrics section
+🛠️ Tech Stack
+Layer	Technology
+Scraping	Python (requests / BeautifulSoup)
+Data Processing	Pandas
+Visualization	Plotly
+App Framework	Streamlit
+Machine Learning	Scikit-learn
+CI/CD	GitHub Actions
+🚀 Deployment
 
----
+The application can be deployed on:
 
-## ⚙️ Tech Stack
+Streamlit Cloud
 
-* **Python**
-* **Pandas**
-* **Plotly**
-* **Streamlit**
-* **Scikit-learn**
-* **GitHub Actions (CI/CD)**
-
----
-
-## 📊 Dashboard Features
-
-### 🔍 Data Exploration
-
-* Interactive filters (price range, category)
-* Raw data preview
-* Clean UI (SaaS-style)
-
-### 📈 Analytics
-
-* Price distribution (Histogram)
-* Price spread (Boxplot)
-* Category analysis
-
-### 📦 KPIs
-
-* Total books
-* Average price
-* Min / Max prices
-
-### 🤖 Machine Learning
-
-* Random Forest model
-* Price prediction feature
-* Evaluation metrics:
-
-  * MAE
-  * R² score
-
-### 📥 Export
-
-* Download filtered dataset as CSV
-
----
-
-## 🧪 Machine Learning
-
-The project includes a simple regression model:
-
-* Features:
-
-  * Page number
-  * Title length
-* Model:
-
-  * Random Forest Regressor
-* Metrics:
-
-  * Mean Absolute Error (MAE)
-  * R² Score
-
----
-
-## 🖥️ Local Setup
-
-```bash
-git clone https://github.com/sebaslinds/web-scraping-ci-cd.git
-cd web-scraping-ci-cd
+📦 Installation
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
 
 pip install -r requirements.txt
+
 streamlit run app.py
-```
+📊 Example Use Cases
+Analyze pricing trends in scraped datasets
+Build end-to-end data pipelines for portfolios
+Demonstrate data engineering + ML integration
+Create interactive dashboards for stakeholders
+🧠 Key Learnings
+Designing scalable data pipelines (Bronze → Silver → Gold)
+Building interactive dashboards with Streamlit
+Integrating machine learning into analytics workflows
+Structuring a project for production readiness
+📌 Future Improvements
+Add more predictive features (category, rating, etc.)
+Deploy model as an API
+Add real-time data ingestion
+Enhance ML model (Random Forest)
+👨‍💻 Author
 
----
-
-## ☁️ Deployment
-
-The app is deployed using **Streamlit Cloud**.
-
-👉 Add `.streamlit/config.toml`:
-
-```toml
-[theme]
-base="dark"
-primaryColor="#6366F1"
-backgroundColor="#0b1020"
-secondaryBackgroundColor="#111827"
-textColor="#E5E7EB"
-```
-
----
-
-## 🔄 CI/CD
-
-This project includes GitHub Actions for:
-
-* Automated pipeline execution
-* Data updates
-* Continuous integration
-
----
-
-## 🎯 Business Value
-
-This dashboard enables:
-
-* Monitoring pricing trends
-* Detecting outliers
-* Understanding market distribution
-* Predicting book prices using ML
-
----
-
-## 👨‍💻 Author
-
-**Sébastien Lindsay**
-
-* GitHub: https://github.com/sebaslinds
-* LinkedIn: https://www.linkedin.com/in/s%C3%A9bastien-lindsay-3a66b4b5/
-
----
-
-## ⭐ Project Highlights
-
-* Full data pipeline (not just a dashboard)
-* Production-ready UI (SaaS style)
-* Machine learning integration
-* Cloud deployment ready
-
----
-
-## 🚀 Next Improvements
-
-* Add real-time data ingestion
-* Deploy API for predictions
-* Improve ML model (feature engineering)
-* Add user authentication (multi-user dashboard)
-
----
-
-
+Sébastien Lindsay
+Data Engineer | Analytics | Machine Learning

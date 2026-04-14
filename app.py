@@ -170,7 +170,7 @@ st.markdown("""
 <div class="hero">
     <h1>📚 Book Analytics</h1>
     <p style="margin:0; color:#dbeafe;">
-        Startup MVP · Web Scraping · Medallion Architecture · Analytics · ML
+        Web Scraping · Medallion Architecture · Analytics · ML
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -190,8 +190,7 @@ with top_right:
 
 st.markdown("### Product Overview")
 st.write(
-    "This MVP turns scraped book data into a usable analytics product with interactive exploration, "
-    "business-friendly KPIs, and a lightweight machine learning prediction module."
+    "This project demonstrates how scraped book data can be transformed into an end-to-end analytics platform with interactive exploration, actionable KPIs, and a machine learning component for price prediction."
 )
 
 if df_filtered.empty:
