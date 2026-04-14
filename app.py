@@ -6,6 +6,7 @@ from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
+from ml.predict import predict_price
 
 # =========================
 # CONFIG
@@ -303,21 +304,21 @@ with tab1:
 with tab2:
     st.markdown("### Price Prediction")
 
-    features = [c for c in ["page", "title_length"] if c in df.columns]
-    X = df[features]
-    y = df["price"]
+# UI INPUTS
+    p1, p2 = st.columns(2)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    with p1:
+        input_page = st.number_input("Page", min_value=1, max_value=1000, value=50)
 
-    model = RandomForestRegressor(n_estimators=120, random_state=42)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
+    with p2:
+        input_title = st.number_input("Title Length", min_value=1, max_value=200, value=20)
 
-    m1, m2 = st.columns(2)
-    metric_card(m1, "📉 MAE", f"{mean_absolute_error(y_test, y_pred):.2f} £")
-    metric_card(m2, "📊 R² Score", f"{r2_score(y_test, y_pred):.2f}")
+# PREDICTION BUTTON
+    if st.button("Predict Price"):
+        prediction = predict_price(input_page, input_title)
+        st.success(f"Predicted price: {prediction:.2f} £")
+
+    st.caption("Model served from trained pipeline (Random Forest)")
 
     st.caption("Model: Random Forest Regressor")
 
