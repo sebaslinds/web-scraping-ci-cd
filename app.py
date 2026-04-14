@@ -1,218 +1,270 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 from datetime import datetime
+
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
 
 # =========================
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="📊 Book Analytics Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="📊 Book Analytics PRO",
+    layout="wide"
 )
 
 # =========================
-# STYLE (léger)
+# STYLE PRO
 # =========================
 st.markdown("""
 <style>
-.kpi-card {
-    padding: 16px;
-    border-radius: 12px;
-    background: #0f172a;
+.main {
+    background-color: #0e1117;
     color: white;
 }
-.small-muted { color: #94a3b8; font-size: 12px; }
+
+.block-container {
+    padding-top: 2rem;
+}
+
+/* TITLES */
+h1, h2, h3 {
+    color: #00C9A7;
+}
+
+/* SIDEBAR */
+section[data-testid="stSidebar"] {
+    background-color: #111827;
+}
+section[data-testid="stSidebar"] * {
+    color: #E5E7EB !important;
+}
+
+/* KPI CARDS */
+[data-testid="stMetric"] {
+    background: linear-gradient(135deg, #1f2937, #111827);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* KPI LABEL */
+[data-testid="stMetricLabel"] {
+    color: #9CA3AF !important;
+}
+
+/* KPI VALUE */
+[data-testid="stMetricValue"] {
+    color: #F9FAFB !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# LOAD DATA (cache)
+# LOAD DATA
 # =========================
-@st.cache_data(show_spinner=False)
-def load_data(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
-    # sécuriser les types
-    if "price" in df.columns:
-        df["price"] = pd.to_numeric(df["price"], errors="coerce")
-    # si tu as rating/category, on garde tel quel
+@st.cache_data
+def load_data():
+    df = pd.read_csv("data/silver/books_clean.csv")
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    df = df.dropna(subset=["price"])
     return df
 
-DATA_PATH = "data/silver/books_clean.csv"  # 🔁 IMPORTANT
-df = load_data(DATA_PATH)
+df = load_data()
+
+# =========================
+# FEATURE ENGINEERING
+# =========================
+df["title_length"] = df["title"].astype(str).apply(len)
 
 # =========================
 # HEADER
 # =========================
-st.title("📚 Book Analytics Dashboard")
-st.caption("Pipeline CI/CD • Bronze → Silver → Gold • Analyse des prix des livres")
+st.title("📚 Book Analytics Dashboard PRO")
+st.markdown("🚀 Pipeline CI/CD + Data Engineering + Machine Learning")
 
 # =========================
-# RAW DATA (expander)
+# CONTEXTE
 # =========================
-with st.expander("📊 Aperçu des données (raw)"):
-    st.write(f"Rows: {len(df)} | Columns: {len(df.columns)}")
-    st.dataframe(df.head(20), use_container_width=True)
+st.markdown("""
+### 📊 Contexte
+Analyse des prix de livres scrapés automatiquement.
 
-# =========================
-# SIDEBAR FILTERS
-# =========================
-st.sidebar.header("🔍 Filters")
+### ⚙️ Pipeline
+- Scraping automatisé
+- Transformation Bronze → Silver → Gold
+- CI/CD GitHub Actions
 
-# garde-fou si dataset vide
-if df.empty or "price" not in df.columns:
-    st.error("Dataset vide ou colonne 'price' manquante.")
-    st.stop()
-
-price_min_global = float(df["price"].min())
-price_max_global = float(df["price"].max())
-
-# slider range (robuste)
-price_range = st.sidebar.slider(
-    "💰 Plage de prix (£)",
-    min_value=price_min_global,
-    max_value=price_max_global,
-    value=(price_min_global, price_max_global),
-    step=0.5
-)
-
-# filtres optionnels (si colonnes présentes)
-category = None
-if "category" in df.columns:
-    cats = sorted([c for c in df["category"].dropna().unique()])
-    category = st.sidebar.multiselect("📚 Catégories", cats, default=cats)
-
-rating = None
-if "rating" in df.columns:
-    ratings = sorted([r for r in df["rating"].dropna().unique()])
-    rating = st.sidebar.multiselect("⭐ Ratings", ratings, default=ratings)
-
-# =========================
-# APPLY FILTERS
-# =========================
-mask = (df["price"] >= price_range[0]) & (df["price"] <= price_range[1])
-
-if category is not None:
-    mask &= df["category"].isin(category)
-
-if rating is not None:
-    mask &= df["rating"].isin(rating)
-
-df_filtered = df.loc[mask].copy()
-
-# =========================
-# ALERTS / QUALITY
-# =========================
-alerts_col, actions_col = st.columns([3, 1])
-with alerts_col:
-    if df_filtered.empty:
-        st.warning("Aucune donnée avec ces filtres.")
-    elif df_filtered["price"].nunique() == 1:
-        st.info("Tous les prix sont identiques dans la sélection.")
-with actions_col:
-    if "last_refresh" not in st.session_state:
-        st.session_state.last_refresh = datetime.now()
-
-    if st.button("🔄 Refresh data"):
-        load_data.clear()
-        st.session_state.last_refresh = datetime.now()
-        st.rerun()
-
-    st.caption(f"Last refresh: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
-
-# =========================
-# KPIs
-# =========================
-def safe_mean(s):
-    return float(s.mean()) if len(s) else 0.0
-
-def safe_max(s):
-    return float(s.max()) if len(s) else 0.0
-
-def safe_min(s):
-    return float(s.min()) if len(s) else 0.0
-
-k1, k2, k3, k4 = st.columns(4)
-k1.metric("📦 Nb livres", f"{len(df_filtered):,}")
-k2.metric("💰 Prix moyen", f"{safe_mean(df_filtered['price']):.2f} £")
-k3.metric("📈 Prix max", f"{safe_max(df_filtered['price']):.2f} £")
-k4.metric("📉 Prix min", f"{safe_min(df_filtered['price']):.2f} £")
+### 🎯 Objectif
+Analyser les prix + prédire les tendances.
+""")
 
 st.markdown("---")
 
 # =========================
-# CHARTS (Plotly)
+# RAW DATA
 # =========================
-c1, c2 = st.columns(2)
-
-with c1:
-    st.subheader("📊 Distribution des prix")
-    if not df_filtered.empty:
-        fig_hist = px.histogram(
-            df_filtered,
-            x="price",
-            nbins=30,
-            title="Distribution des prix",
-        )
-        fig_hist.update_layout(margin=dict(l=10, r=10, t=40, b=10))
-        st.plotly_chart(fig_hist, use_container_width=True)
-    else:
-        st.empty()
-
-with c2:
-    st.subheader("📦 Prix par catégorie")
-    if "category" in df_filtered.columns and not df_filtered.empty:
-        df_cat = (
-            df_filtered.groupby("category", as_index=False)["price"]
-            .mean()
-            .sort_values("price", ascending=False)
-        )
-        fig_bar = px.bar(
-            df_cat,
-            x="category",
-            y="price",
-            title="Prix moyen par catégorie",
-        )
-        fig_bar.update_layout(xaxis_tickangle=-45, margin=dict(l=10, r=10, t=40, b=10))
-        st.plotly_chart(fig_bar, use_container_width=True)
-    else:
-        st.info("Colonne 'category' non disponible.")
+with st.expander("📊 Aperçu des données"):
+    st.dataframe(df.head(20))
 
 # =========================
-# TABLE + EXPORT
+# SIDEBAR
 # =========================
-st.subheader("📄 Données filtrées")
+st.sidebar.title("⚙️ Controls")
 
-col_t1, col_t2 = st.columns([4, 1])
-with col_t1:
-    st.dataframe(df_filtered, use_container_width=True)
+min_price = float(df["price"].min())
+max_price = float(df["price"].max())
 
-with col_t2:
-    csv = df_filtered.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="📥 Export CSV",
-        data=csv,
-        file_name=f"books_filtered_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        mime="text/csv"
+if min_price == max_price:
+    st.sidebar.warning("⚠️ Tous les prix sont identiques")
+    price_range = (min_price, max_price)
+else:
+    price_range = st.sidebar.slider(
+        "💰 Price Range (£)",
+        min_price,
+        max_price,
+        (min_price, max_price)
     )
 
 # =========================
-# INSIGHTS (storytelling)
+# FILTER
+# =========================
+df_filtered = df[
+    (df["price"] >= price_range[0]) &
+    (df["price"] <= price_range[1])
+]
+
+# =========================
+# REFRESH
+# =========================
+colA, colB = st.columns([4,1])
+
+with colB:
+    if "last_refresh" not in st.session_state:
+        st.session_state.last_refresh = datetime.now()
+
+    if st.button("🔄 Refresh"):
+        load_data.clear()
+        st.session_state.last_refresh = datetime.now()
+        st.rerun()
+
+    st.caption(f"⏱ {st.session_state.last_refresh.strftime('%H:%M:%S')}")
+
+# =========================
+# EMPTY CHECK
+# =========================
+if df_filtered.empty:
+    st.warning("⚠️ Aucun résultat")
+    st.stop()
+
+# =========================
+# KPIs
+# =========================
+k1, k2, k3, k4 = st.columns(4)
+
+k1.metric("📦 Books", len(df_filtered))
+k2.metric("💰 Avg Price", f"{df_filtered['price'].mean():.2f} £")
+k3.metric("📈 Max", f"{df_filtered['price'].max():.2f} £")
+k4.metric("📉 Min", f"{df_filtered['price'].min():.2f} £")
+
+st.markdown("---")
+
+# =========================
+# CHARTS
+# =========================
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("📊 Distribution")
+    fig1 = px.histogram(df_filtered, x="price", nbins=30)
+    st.plotly_chart(fig1, use_container_width=True)
+
+with col2:
+    st.subheader("📈 Boxplot")
+    fig2 = px.box(df_filtered, y="price")
+    st.plotly_chart(fig2, use_container_width=True)
+
+# =========================
+# MACHINE LEARNING
+# =========================
+st.markdown("---")
+st.markdown("## 🤖 Price Prediction Model")
+
+features = ["page", "title_length"]
+features = [f for f in features if f in df.columns]
+
+X = df[features]
+y = df["price"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+c1, c2 = st.columns(2)
+c1.metric("📉 MAE", f"{mae:.2f} £")
+c2.metric("📊 R²", f"{r2:.2f}")
+
+st.caption("Modèle basé sur RandomForest")
+
+# =========================
+# PREDICTION UI
+# =========================
+st.markdown("### 🔮 Predict a Book Price")
+
+input_page = st.number_input("Page", min_value=1, max_value=1000, value=50)
+input_title = st.number_input("Title Length", min_value=1, max_value=200, value=20)
+
+if st.button("💡 Predict Price"):
+    input_df = pd.DataFrame([{
+        "page": input_page,
+        "title_length": input_title
+    }])
+
+    prediction = model.predict(input_df)[0]
+    st.success(f"Predicted price: {prediction:.2f} £")
+
+# =========================
+# TABLE
+# =========================
+st.markdown("---")
+st.subheader("📄 Data")
+
+st.dataframe(df_filtered)
+
+csv = df_filtered.to_csv(index=False).encode("utf-8")
+
+st.download_button(
+    "📥 Download CSV",
+    csv,
+    "books_filtered.csv"
+)
+
+# =========================
+# INSIGHTS
 # =========================
 st.markdown("## 🧠 Insights")
-if not df_filtered.empty:
-    p_mean = safe_mean(df_filtered["price"])
-    p_max = safe_max(df_filtered["price"])
-    p_min = safe_min(df_filtered["price"])
-    st.write(
-        f"- Le prix moyen est **{p_mean:.2f} £**, avec un max à **{p_max:.2f} £** et un min à **{p_min:.2f} £**."
-    )
-    if "category" in df_filtered.columns:
-        top_cat = (
-            df_filtered.groupby("category")["price"].mean().sort_values(ascending=False)
-        )
-        if not top_cat.empty:
-            st.write(f"- Catégorie la plus chère en moyenne : **{top_cat.index[0]}**.")
-else:
-    st.write("- Ajuste les filtres pour voir les insights.")
+
+st.write(f"""
+- 📊 Average price: **{df_filtered['price'].mean():.2f} £**
+- 📈 Highest price: **{df_filtered['price'].max():.2f} £**
+- 📉 Lowest price: **{df_filtered['price'].min():.2f} £**
+- 📦 Total books: **{len(df_filtered)}**
+""")
