@@ -1,1 +1,18 @@
-data/
+# Python
+__pycache__/
+*.pyc
+
+# Streamlit config (local seulement)
+.streamlit/
+
+# Matplotlib cache
+.matplotlib/
+
+# Windows / local env
+AppData/
+
+# VSCode (optionnel)
+.vscode/
+
+# Logs
+*.log
