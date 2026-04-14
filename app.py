@@ -6,7 +6,9 @@ from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
+
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 # =========================
 # CONFIG
@@ -114,37 +116,57 @@ div[data-testid="stDataFrame"] {
 # =========================
 # DATA
 # =========================
-from google.cloud import bigquery
-
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=60)
 def load_data():
     try:
-        client = bigquery.Client(project="domainecareycabaneasucre")
+        st.write("🔐 Initializing BigQuery connection...")
+
+        credentials = service_account.Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"]
+        )
+
+        client = bigquery.Client(
+            credentials=credentials,
+            project=credentials.project_id
+        )
+
+        st.write("📡 Running query...")
 
         query = """
         SELECT *
         FROM `domainecareycabaneasucre.books.books_agg`
+        LIMIT 1000
         """
 
         df = client.query(query).to_dataframe()
 
-        # sécurité
-        if "price" in df.columns:
-            df["price"] = pd.to_numeric(df["price"], errors="coerce")
-            df = df.dropna(subset=["price"])
-
-        # feature ML optionnelle
-        if "title" in df.columns:
-            df["title_length"] = df["title"].astype(str).str.len()
+        st.success("✅ Data loaded")
 
         return df
 
     except Exception as e:
-        st.error("❌ Failed to load data from BigQuery")
-        st.text(str(e))
+        st.error("❌ BigQuery error")
+        st.write(e)
         return pd.DataFrame()
 
+
 df = load_data()
+
+# =========================
+# SAFE GUARD (CRITICAL)
+# =========================
+if df.empty:
+    st.error("No data loaded from BigQuery.")
+    st.stop()
+
+# 🔥 AUTO-FIX COLUMN NAME
+if "price" not in df.columns:
+    if "avg_price" in df.columns:
+        df["price"] = df["avg_price"]
+    else:
+        st.error("No price column found in dataset.")
+        st.write("Columns available:", df.columns)
+        st.stop()
 # =========================
 # SIDEBAR
 # =========================
@@ -162,7 +184,8 @@ else:
         min_value=min_price,
         max_value=max_price,
         value=(min_price, max_price),
-        format="£%.2f"
+        format="£%.2f",
+        key="price_range_slider"
     )
 
 categories = None
@@ -171,7 +194,8 @@ if "category" in df.columns:
     categories = st.sidebar.multiselect(
         "📚 Category",
         options=all_categories,
-        default=all_categories
+        default=all_categories,
+        key="category_filter"
     )
 
 # =========================
@@ -203,7 +227,7 @@ with top_right:
     if "last_refresh" not in st.session_state:
         st.session_state.last_refresh = datetime.now()
 
-    if st.button("🔄 Refresh"):
+    if st.button("🔄 Refresh", key="refresh_button"):
         load_data.clear()
         st.session_state.last_refresh = datetime.now()
         st.rerun()
@@ -212,8 +236,8 @@ with top_right:
 
 st.markdown("### Product Overview")
 st.write(
-    "This MVP turns scraped book data into a usable analytics product with interactive exploration, "
-    "business-friendly KPIs, and a lightweight machine learning prediction module."
+    "This project transforms scraped book data into a structured analytics platform, "
+    "combining interactive exploration, business-focused KPIs, and a lightweight machine learning component for price prediction."
 )
 
 if df_filtered.empty:
@@ -327,36 +351,52 @@ with tab2:
     st.markdown("### Price Prediction")
 
     features = [c for c in ["page", "title_length"] if c in df.columns]
-    X = df[features]
-    y = df["price"]
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
+    if len(features) < 2:
+        st.warning("Not enough features available for ML. Expected at least 'page' and 'title_length'.")
+    else:
+        X = df[features]
+        y = df["price"]
 
-    model = RandomForestRegressor(n_estimators=120, random_state=42)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
-    m1, m2 = st.columns(2)
-    metric_card(m1, "📉 MAE", f"{mean_absolute_error(y_test, y_pred):.2f} £")
-    metric_card(m2, "📊 R² Score", f"{r2_score(y_test, y_pred):.2f}")
+        model = RandomForestRegressor(n_estimators=120, random_state=42)
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
 
-    st.caption("Model: Random Forest Regressor")
+        m1, m2 = st.columns(2)
+        metric_card(m1, "📉 MAE", f"{mean_absolute_error(y_test, y_pred):.2f} £")
+        metric_card(m2, "📊 R² Score", f"{r2_score(y_test, y_pred):.2f}")
 
-    p1, p2 = st.columns(2)
-    with p1:
-        input_page = st.number_input("Page", min_value=1, max_value=1000, value=50)
-    with p2:
-        input_title = st.number_input("Title Length", min_value=1, max_value=200, value=20)
+        st.caption("Model: Random Forest Regressor")
 
-    if st.button("Predict Price"):
-        pred_df = pd.DataFrame([{
-            "page": input_page,
-            "title_length": input_title
-        }])
-        prediction = model.predict(pred_df)[0]
-        st.success(f"Predicted price: {prediction:.2f} £")
+        p1, p2 = st.columns(2)
+        with p1:
+            input_page = st.number_input(
+                "Page",
+                min_value=1,
+                max_value=1000,
+                value=50,
+                key="ml_page_input"
+            )
+        with p2:
+            input_title = st.number_input(
+                "Title Length",
+                min_value=1,
+                max_value=200,
+                value=20,
+                key="ml_title_input"
+            )
+
+        if st.button("Predict Price", key="predict_price_button"):
+            pred_df = pd.DataFrame([{
+                "page": input_page,
+                "title_length": input_title
+            }])
+            prediction = model.predict(pred_df)[0]
+            st.success(f"Predicted price: {prediction:.2f} £")
 
 # =========================
 # DATA TAB
@@ -370,7 +410,8 @@ with tab3:
         "📥 Download CSV",
         csv,
         "books_filtered.csv",
-        "text/csv"
+        "text/csv",
+        key="download_csv_button"
     )
 
     with st.expander("Raw Data Preview"):

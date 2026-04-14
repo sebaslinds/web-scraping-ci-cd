@@ -18,4 +18,4 @@ AppData/
 *.log
 
 # GCP credentials
-domainecareycabaneasucre-1e3c2b75c326.json
+*.json
