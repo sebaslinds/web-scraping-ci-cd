@@ -1,257 +1,178 @@
-\# 📊 Web Scraping CI/CD Pipeline
+# 📚 Book Analytics Dashboard
 
+🚀 **End-to-End Data Engineering + Machine Learning Project**
 
+---
 
-\## 🚀 Description
+## 🧠 Overview
 
+This project delivers a full **data pipeline + analytics dashboard** to analyze book pricing trends from web-scraped data.
 
+It demonstrates production-ready skills in:
 
-Ce projet implémente un pipeline automatisé de web scraping en Python.
+* Data Engineering (ETL pipeline)
+* Data Modeling (Bronze → Silver → Gold)
+* CI/CD automation
+* Machine Learning (price prediction)
+* Interactive Dashboard (Streamlit)
 
+---
 
+## 🏗️ Architecture
 
-Il extrait des données de livres depuis le site :
+```
+Web Scraping → Bronze → Silver → Gold → Dashboard + ML
+```
 
-http://books.toscrape.com/
+### Pipeline Stages
 
+| Layer  | Description                  |
+| ------ | ---------------------------- |
+| Bronze | Raw scraped data             |
+| Silver | Cleaned & structured data    |
+| Gold   | Aggregated analytics dataset |
 
+---
 
-Les données sont nettoyées et sauvegardées sous forme de fichiers CSV versionnés avec timestamp.
+## ⚙️ Tech Stack
 
+* **Python**
+* **Pandas**
+* **Plotly**
+* **Streamlit**
+* **Scikit-learn**
+* **GitHub Actions (CI/CD)**
 
+---
 
-Le pipeline est exécuté automatiquement grâce à GitHub Actions (CI/CD).
+## 📊 Dashboard Features
 
+### 🔍 Data Exploration
 
+* Interactive filters (price range, category)
+* Raw data preview
+* Clean UI (SaaS-style)
 
-\---
+### 📈 Analytics
 
+* Price distribution (Histogram)
+* Price spread (Boxplot)
+* Category analysis
 
+### 📦 KPIs
 
-\## 🧱 Stack Technique
+* Total books
+* Average price
+* Min / Max prices
 
+### 🤖 Machine Learning
 
+* Random Forest model
+* Price prediction feature
+* Evaluation metrics:
 
-\- Python 3.10
+  * MAE
+  * R² score
 
-\- requests
+### 📥 Export
 
-\- BeautifulSoup4
+* Download filtered dataset as CSV
 
-\- pandas
+---
 
-\- GitHub Actions (CI/CD)
+## 🧪 Machine Learning
 
+The project includes a simple regression model:
 
+* Features:
 
-\---
+  * Page number
+  * Title length
+* Model:
 
+  * Random Forest Regressor
+* Metrics:
 
+  * Mean Absolute Error (MAE)
+  * R² Score
 
-\## ⚙️ Fonctionnalités
+---
 
-
-
-\- ✅ Scraping web automatisé
-
-\- ✅ Nettoyage des données (regex)
-
-\- ✅ Gestion des erreurs
-
-\- ✅ Création automatique du dossier `data/`
-
-\- ✅ Sauvegarde des données avec timestamp
-
-\- ✅ Pipeline CI/CD automatisé
-
-
-
-\---
-
-
-
-\## 📁 Structure du projet
-
-
-
-
-
-web-scraping-ci-cd/
-
-│
-
-├── scraper.py
-
-├── requirements.txt
-
-├── README.md
-
-├── data/
-
-│
-
-└── .github/
-
-└── workflows/
-
-└── pipeline.yml
-
-
-
-
-
-\---
-
-
-
-\## ▶️ Exécution locale
-
-
-
-\### 1. Installer les dépendances
-
-
-
-
+## 🖥️ Local Setup
+
+```bash
+git clone https://github.com/sebaslinds/web-scraping-ci-cd.git
+cd web-scraping-ci-cd
 
 pip install -r requirements.txt
+streamlit run app.py
+```
 
+---
 
+## ☁️ Deployment
 
+The app is deployed using **Streamlit Cloud**.
 
+👉 Add `.streamlit/config.toml`:
 
-\### 2. Lancer le script
+```toml
+[theme]
+base="dark"
+primaryColor="#6366F1"
+backgroundColor="#0b1020"
+secondaryBackgroundColor="#111827"
+textColor="#E5E7EB"
+```
 
+---
 
+## 🔄 CI/CD
 
+This project includes GitHub Actions for:
 
+* Automated pipeline execution
+* Data updates
+* Continuous integration
 
-python scraper.py
+---
 
+## 🎯 Business Value
 
+This dashboard enables:
 
+* Monitoring pricing trends
+* Detecting outliers
+* Understanding market distribution
+* Predicting book prices using ML
 
+---
 
-\### 3. Résultat
+## 👨‍💻 Author
 
+**Sébastien Lindsay**
 
+* GitHub: https://github.com/sebaslinds
+* LinkedIn: https://www.linkedin.com/in/s%C3%A9bastien-lindsay-3a66b4b5/
 
-Un fichier CSV est généré dans le dossier `data/` :
+---
 
+## ⭐ Project Highlights
 
+* Full data pipeline (not just a dashboard)
+* Production-ready UI (SaaS style)
+* Machine learning integration
+* Cloud deployment ready
 
+---
 
+## 🚀 Next Improvements
 
-data/books\_YYYYMMDD\_HHMMSS.csv
+* Add real-time data ingestion
+* Deploy API for predictions
+* Improve ML model (feature engineering)
+* Add user authentication (multi-user dashboard)
 
+---
 
 
-
-
-\---
-
-
-
-\## ⚙️ CI/CD avec GitHub Actions
-
-
-
-Le pipeline s’exécute automatiquement :
-
-
-
-\- à chaque `git push`
-
-\- tous les jours à midi (UTC)
-
-
-
-\### Étapes du pipeline :
-
-
-
-1\. Installation de Python
-
-2\. Installation des dépendances
-
-3\. Exécution du script
-
-4\. Sauvegarde des données
-
-5\. Commit automatique des nouveaux fichiers
-
-
-
-\---
-
-
-
-\## 📊 Exemple de données
-
-
-
-| title | price | availability |
-
-|------|------|-------------|
-
-| Book Title | 51.77 | In stock |
-
-
-
-\---
-
-
-
-\## 💡 Améliorations futures
-
-
-
-\- Pagination (scraping multi-pages)
-
-\- Logging avancé
-
-\- Tests unitaires (pytest)
-
-\- Dockerisation
-
-\- Data pipeline (Bronze / Silver / Gold)
-
-\- Intégration avec une base de données
-
-
-
-\---
-
-
-
-\## 🧠 Objectif du projet
-
-
-
-Ce projet démontre :
-
-
-
-\- Automatisation de pipeline data
-
-\- Web scraping robuste
-
-\- Bonnes pratiques Python
-
-\- Mise en place d’un CI/CD
-
-\- Approche Data Engineering
-
-
-
-\---
-
-
-
-\## 👤 Auteur
-
-
-
-Sebastien Lindsay
-
-"# web-scraping-ci-cd" 
