@@ -1,55 +1,33 @@
-name: Run Data Pipeline
-
-permissions:
-  contents: write
+name: Data Pipeline
 
 on:
   push:
     branches: [ main ]
-  schedule:
-    - cron: '0 12 * * *'
 
 jobs:
-  pipeline:
+  run-pipeline:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      # 2. Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      # 3. Install dependencies
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      # 4. Run scraper (Bronze)
-      - name: Run scraper
-        run: python scraper.py
-
-      # 5. Run pipeline (Silver + Gold)
-      - name: Run data pipeline
+      - name: Run pipeline
         run: python orchestration/pipeline.py
 
-      # 6. Train ML model
-      - name: Train model
+      - name: Train ML model
         run: python ml/train.py
 
-      # 7. Commit updated data + model
-      - name: Commit changes
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
 
-          git add data/ ml/model.pkl
-          git commit -m "Auto update data and model" || echo "No changes"
 
-      # 8. Push changes
-      - name: Push changes
-        run: git push
+
+
+
+

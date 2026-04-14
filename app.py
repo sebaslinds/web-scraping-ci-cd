@@ -209,26 +209,12 @@ with col2:
 # =========================
 st.markdown("## 🤖 Machine Learning")
 
-if "page" in df.columns:
-    X = df[["page"]]
-    y = df["price"]
+input_page = st.number_input("Page", 1, 1000, 50)
+input_title = st.number_input("Title Length", 1, 200, 20)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
-    model = LinearRegression()
-    model.fit(X_train, y_train)
-
-    preds = model.predict(X_test)
-
-    mae = mean_absolute_error(y_test, preds)
-    r2 = r2_score(y_test, preds)
-
-    m1, m2 = st.columns(2)
-
-    kpi(m1, "📉 MAE", f"{mae:.2f}")
-    kpi(m2, "📊 R² Score", f"{r2:.2f}")
-
-    st.caption("Simple regression model predicting price from page index.")
+if st.button("Predict Price"):
+    prediction = predict_price(input_page, input_title)
+    st.success(f"Predicted price: {prediction:.2f} £")
 
 # =========================
 # TABLE + EXPORT
