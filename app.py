@@ -11,30 +11,39 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="Book Analytics Dashboard",
+    page_title="Book Analytics",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # =========================
-# ULTRA SAAS UI
+# ULTIMATE UI (SaaS)
 # =========================
 st.markdown("""
 <style>
-/* App background */
+
+/* ========= GLOBAL ========= */
 .stApp {
-    background: linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+    background: radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.15), transparent),
+                radial-gradient(900px 500px at 110% 10%, rgba(16,185,129,0.12), transparent),
+                linear-gradient(180deg, #0b1020 0%, #0f172a 100%) !important;
     color: #e5e7eb;
 }
-
-/* Main container */
 .block-container {
     max-width: 1280px;
     padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
-/* Typography */
+/* Remove Streamlit white header/strips */
+header[data-testid="stHeader"],
+div[data-testid="stToolbar"],
+[data-testid="stDecoration"] {
+    background: transparent !important;
+    display: none !important;
+}
+
+/* ========= TYPO ========= */
 h1 {
     font-size: 3rem !important;
     font-weight: 800 !important;
@@ -45,11 +54,9 @@ h2, h3 {
     color: #c7d2fe !important;
     font-weight: 700 !important;
 }
-p, li, label, div {
-    color: #e5e7eb;
-}
+.muted { color: #94a3b8; }
 
-/* Sidebar */
+/* ========= SIDEBAR ========= */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
     border-right: 1px solid rgba(255,255,255,0.06);
@@ -58,101 +65,92 @@ section[data-testid="stSidebar"] * {
     color: #e2e8f0 !important;
 }
 
-/* KPI cards */
+/* ========= HERO ========= */
+.hero {
+    background: linear-gradient(135deg, rgba(99,102,241,0.20), rgba(16,185,129,0.14));
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 20px 24px;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    margin-bottom: 1rem;
+}
+.hero h3 { margin: 0 0 .4rem 0; color:#fff !important; }
+.hero p { margin: 0; color:#cbd5e1 !important; }
+
+/* ========= CARDS ========= */
+.card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    backdrop-filter: blur(6px);
+}
+.card:hover {
+    transform: translateY(-2px);
+    transition: .2s ease;
+}
+
+/* ========= KPI ========= */
 div[data-testid="stMetric"] {
     background: linear-gradient(135deg, #111827, #1f2937) !important;
-    border: 1px solid rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
     border-radius: 16px !important;
     padding: 22px !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25) !important;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.28) !important;
 }
 div[data-testid="stMetricLabel"] {
     color: #94a3b8 !important;
-    font-size: 0.95rem !important;
+    font-size: .9rem !important;
     font-weight: 600 !important;
 }
 div[data-testid="stMetricValue"] {
     color: #ffffff !important;
     font-size: 2rem !important;
     font-weight: 800 !important;
+    letter-spacing: .02em;
 }
 div[data-testid="stMetric"]:hover {
     transform: translateY(-2px);
-    transition: all 0.2s ease;
+    transition: .2s ease;
 }
 
-/* Buttons */
-.stButton > button,
-.stDownloadButton > button {
+/* ========= BUTTONS ========= */
+.stButton>button, .stDownloadButton>button {
     background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
     color: white !important;
-    border: none !important;
     border-radius: 12px !important;
     font-weight: 700 !important;
-    padding: 0.65rem 1rem !important;
-    box-shadow: 0 8px 18px rgba(79,70,229,0.25);
+    padding: .65rem 1rem !important;
+    border: none !important;
+    box-shadow: 0 10px 22px rgba(79,70,229,0.28);
 }
-.stButton > button:hover,
-.stDownloadButton > button:hover {
+.stButton>button:hover, .stDownloadButton>button:hover {
     filter: brightness(1.08);
 }
 
-/* Expander */
+/* ========= EXPANDER ========= */
 .streamlit-expanderHeader {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.04);
     border-radius: 12px;
     font-weight: 700;
 }
 
-/* Dataframe container */
+/* ========= DATAFRAME ========= */
 [data-testid="stDataFrame"] {
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 14px;
     overflow: hidden;
 }
 
-/* Divider spacing */
-hr {
-    border-color: rgba(255,255,255,0.08);
-}
+/* ========= DIVIDER ========= */
+hr { border-color: rgba(255,255,255,0.08); }
 
-/* Small muted text */
-.muted {
-    color: #94a3b8;
-    font-size: 0.95rem;
-}
-
-/* Hero card */
-.hero {
-    background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(16,185,129,0.10));
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 20px 24px;
-    border-radius: 18px;
-    margin-bottom: 1rem;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-}
-.hero h3 {
-    margin: 0 0 0.4rem 0;
-    color: #ffffff !important;
-}
-.hero p {
-    margin: 0;
-    color: #cbd5e1 !important;
-}
-
-/* Section cards */
-.card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.16);
-}
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# LOAD DATA
+# DATA
 # =========================
 @st.cache_data
 def load_data():
@@ -167,12 +165,12 @@ df = load_data()
 # =========================
 # HEADER
 # =========================
-st.title("📚 Book Analytics Dashboard")
+st.title("📚 Book Analytics")
 
 st.markdown("""
 <div class="hero">
     <h3>End-to-End Data Product</h3>
-    <p>Built with automated scraping, Bronze → Silver → Gold data modeling, CI/CD, interactive analytics, and a machine learning layer for price prediction.</p>
+    <p>Automated scraping → Bronze → Silver → Gold modeling, CI/CD, interactive analytics, and a machine learning layer for price prediction.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -192,7 +190,7 @@ Identify pricing patterns and predict book prices.
 st.markdown("---")
 
 # =========================
-# DATA PREVIEW
+# PREVIEW
 # =========================
 with st.expander("📊 Raw Data Preview"):
     st.dataframe(df.head(20), use_container_width=True)
@@ -217,7 +215,6 @@ else:
         format="£%.2f"
     )
 
-# Optional category filter
 categories = None
 if "category" in df.columns:
     categories = st.sidebar.multiselect(
@@ -254,15 +251,15 @@ with right:
     st.caption(f"Last refresh: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
 
 if df_filtered.empty:
-    st.warning("No data available for the selected filters.")
+    st.warning("No data for selected filters.")
     st.stop()
 
 # =========================
-# OVERVIEW
+# KPIs
 # =========================
 st.markdown("## 📊 Overview")
-
 k1, k2, k3, k4 = st.columns(4)
+
 k1.metric("📦 Books", f"{len(df_filtered):,}")
 k2.metric("💰 Avg Price", f"{df_filtered['price'].mean():.2f} £")
 k3.metric("📈 Max Price", f"{df_filtered['price'].max():.2f} £")
@@ -274,18 +271,12 @@ st.markdown("---")
 # ANALYTICS
 # =========================
 st.markdown("## 📈 Analytics")
-
 c1, c2 = st.columns(2)
 
 with c1:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    fig_hist = px.histogram(
-        df_filtered,
-        x="price",
-        nbins=30,
-        title="Price Distribution",
-        color_discrete_sequence=["#6366f1"]
-    )
+    fig_hist = px.histogram(df_filtered, x="price", nbins=30, title="Price Distribution",
+                            color_discrete_sequence=["#6366f1"])
     fig_hist.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -297,12 +288,8 @@ with c1:
 
 with c2:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    fig_box = px.box(
-        df_filtered,
-        y="price",
-        title="Price Spread",
-        color_discrete_sequence=["#10b981"]
-    )
+    fig_box = px.box(df_filtered, y="price", title="Price Spread",
+                     color_discrete_sequence=["#10b981"])
     fig_box.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -320,14 +307,9 @@ if "category" in df_filtered.columns:
         .mean()
         .sort_values("price", ascending=False)
     )
-    fig_cat = px.bar(
-        df_cat,
-        x="category",
-        y="price",
-        title="Average Price by Category",
-        color="price",
-        color_continuous_scale="viridis"
-    )
+    fig_cat = px.bar(df_cat, x="category", y="price",
+                     title="Average Price by Category",
+                     color="price", color_continuous_scale="viridis")
     fig_cat.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -341,19 +323,17 @@ if "category" in df_filtered.columns:
 st.markdown("---")
 
 # =========================
-# MACHINE LEARNING
+# ML
 # =========================
 st.markdown("## 🤖 Machine Learning")
 
-features = [col for col in ["page", "title_length"] if col in df.columns]
+features = [c for c in ["page", "title_length"] if c in df.columns]
 X = df[features]
 y = df["price"]
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = RandomForestRegressor(n_estimators=100, random_state=42)
+model = RandomForestRegressor(n_estimators=120, random_state=42)
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
@@ -368,33 +348,25 @@ st.markdown("### 🔮 Predict Price")
 
 p1, p2 = st.columns(2)
 with p1:
-    input_page = st.number_input("Page", min_value=1, max_value=1000, value=50)
+    input_page = st.number_input("Page", 1, 1000, 50)
 with p2:
-    input_title_length = st.number_input("Title Length", min_value=1, max_value=200, value=20)
+    input_title = st.number_input("Title Length", 1, 200, 20)
 
 if st.button("Predict Price"):
-    pred_df = pd.DataFrame([{
-        "page": input_page,
-        "title_length": input_title_length
-    }])
+    pred_df = pd.DataFrame([{"page": input_page, "title_length": input_title}])
     prediction = model.predict(pred_df)[0]
     st.success(f"Predicted price: {prediction:.2f} £")
 
 st.markdown("---")
 
 # =========================
-# DATA TABLE
+# DATA
 # =========================
 st.markdown("## 📄 Data")
 st.dataframe(df_filtered, use_container_width=True)
 
 csv = df_filtered.to_csv(index=False).encode("utf-8")
-st.download_button(
-    "📥 Download CSV",
-    csv,
-    "books_filtered.csv",
-    "text/csv"
-)
+st.download_button("📥 Download CSV", csv, "books_filtered.csv")
 
 # =========================
 # INSIGHTS
