@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from ml.predict import predict_price
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score
 
 # =========================
 # CONFIG
@@ -13,45 +15,58 @@ st.set_page_config(
 )
 
 # =========================
-# STYLE
+# STYLE (CLEAN SAAS UI)
 # =========================
 st.markdown("""
 <style>
+
+/* GLOBAL */
 .main {
     background-color: #0b1220;
     color: #e5e7eb;
 }
 
+/* SIDEBAR */
 section[data-testid="stSidebar"] {
     background-color: #111827;
 }
 
+/* HEADER */
 .hero {
     padding: 6px 0 10px 0;
 }
 
-.metric-card {
-    background: linear-gradient(135deg, #111827, #1f2937);
+/* KPI CARDS */
+.kpi-card {
+    background: linear-gradient(135deg, #0b1220, #121a2b);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 14px;
     padding: 16px;
 }
 
-.metric-label {
+.kpi-label {
     color: #9fb3c8;
     font-size: 0.9rem;
 }
 
-.metric-value {
+.kpi-value {
     color: #ffffff;
     font-size: 1.8rem;
     font-weight: 800;
 }
 
+/* TABLE */
+div[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* BUTTON */
 .stButton > button {
     border-radius: 10px;
     font-weight: 700;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -63,10 +78,57 @@ def load_data():
     df = pd.read_csv("data/silver/books_clean.csv")
     df["price"] = pd.to_numeric(df["price"], errors="coerce")
     df = df.dropna(subset=["price"])
-    df["title_length"] = df["title"].astype(str).str.len()
     return df
 
 df = load_data()
+
+# =========================
+# HEADER + REFRESH
+# =========================
+col_title, col_refresh = st.columns([6,1])
+
+with col_title:
+    st.markdown("""
+    <div class="hero">
+        <h1>📚 Book Analytics Dashboard</h1>
+        <p style="margin:0;color:#cbd5f5;">
+            Web Scraping · Medallion Architecture · Analytics · Machine Learning
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_refresh:
+    if "last_refresh" not in st.session_state:
+        st.session_state.last_refresh = datetime.now()
+
+    if st.button("🔄 Refresh"):
+        load_data.clear()
+        st.session_state.last_refresh = datetime.now()
+        st.rerun()
+
+    st.caption(st.session_state.last_refresh.strftime("%H:%M:%S"))
+
+# =========================
+# CONTEXT
+# =========================
+st.markdown("""
+### 📊 Context
+This project demonstrates how scraped book data can be transformed into an end-to-end analytics platform with interactive exploration, actionable KPIs, and a machine learning component for price prediction.
+
+### ⚙️ Pipeline
+- Automated scraping
+- Bronze → Silver → Gold transformation
+- CI/CD with GitHub Actions
+
+### 🎯 Objective
+Analyze pricing patterns and predict book prices.
+""")
+
+# =========================
+# RAW DATA
+# =========================
+with st.expander("📊 Raw Data Preview"):
+    st.dataframe(df.head(20), use_container_width=True)
 
 # =========================
 # SIDEBAR
@@ -80,65 +142,41 @@ price_range = st.sidebar.slider(
     "💰 Price Range (£)",
     min_price,
     max_price,
-    (min_price, max_price),
-    key="price_slider"
+    (min_price, max_price)
 )
 
+# =========================
+# FILTER DATA
+# =========================
 df_filtered = df[
     (df["price"] >= price_range[0]) &
     (df["price"] <= price_range[1])
 ]
 
-# =========================
-# HEADER + REFRESH
-# =========================
-col_title, col_refresh = st.columns([6, 1])
-
-with col_title:
-    st.markdown("""
-    <div class="hero">
-        <h1>📚 Book Analytics Dashboard</h1>
-        <p style="margin:0;color:#cbd5f5;">
-            Data Pipeline · Analytics · Machine Learning
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_refresh:
-    if "last_refresh" not in st.session_state:
-        st.session_state.last_refresh = datetime.now()
-
-    if st.button("🔄", key="refresh_btn"):
-        load_data.clear()
-        st.session_state.last_refresh = datetime.now()
-        st.rerun()
-
-    st.caption(st.session_state.last_refresh.strftime("%H:%M:%S"))
-
-# =========================
-# CHECK DATA
-# =========================
 if df_filtered.empty:
     st.warning("No data matches your filters.")
     st.stop()
 
 # =========================
-# KPI
+# KPI FUNCTION
 # =========================
-def metric_card(col, label, value):
+def kpi(col, label, value):
     col.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">{label}</div>
-        <div class="metric-value">{value}</div>
+    <div class="kpi-card">
+        <div class="kpi-label">{label}</div>
+        <div class="kpi-value">{value}</div>
     </div>
     """, unsafe_allow_html=True)
 
+# =========================
+# KPIs
+# =========================
 k1, k2, k3, k4 = st.columns(4)
 
-metric_card(k1, "📦 Books", len(df_filtered))
-metric_card(k2, "💰 Avg Price", f"{df_filtered['price'].mean():.2f} £")
-metric_card(k3, "📈 Max Price", f"{df_filtered['price'].max():.2f} £")
-metric_card(k4, "📉 Min Price", f"{df_filtered['price'].min():.2f} £")
+kpi(k1, "📦 Books", len(df_filtered))
+kpi(k2, "💰 Avg Price", f"{df_filtered['price'].mean():.2f} £")
+kpi(k3, "📈 Max Price", f"{df_filtered['price'].max():.2f} £")
+kpi(k4, "📉 Min Price", f"{df_filtered['price'].min():.2f} £")
 
 st.markdown("---")
 
@@ -149,7 +187,8 @@ def style_fig(fig):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font_color="#e5e7eb"
+        font_color="#e5e7eb",
+        margin=dict(l=10, r=10, t=40, b=10)
     )
     return fig
 
@@ -157,54 +196,49 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("📊 Price Distribution")
-    fig1 = px.histogram(df_filtered, x="price", nbins=30)
+    fig1 = px.histogram(df_filtered, x="price", nbins=30, color_discrete_sequence=["#6366f1"])
     st.plotly_chart(style_fig(fig1), use_container_width=True)
 
 with col2:
-    st.subheader("📈 Price Spread")
-    fig2 = px.box(df_filtered, y="price")
+    st.subheader("📈 Price Boxplot")
+    fig2 = px.box(df_filtered, y="price", color_discrete_sequence=["#10b981"])
     st.plotly_chart(style_fig(fig2), use_container_width=True)
 
 # =========================
-# MACHINE LEARNING (FIXED)
+# MACHINE LEARNING
 # =========================
 st.markdown("## 🤖 Machine Learning")
 
-input_page = st.number_input(
-    "Page",
-    min_value=1,
-    max_value=1000,
-    value=50,
-    key="ml_page_input"
-)
+if "page" in df.columns:
+    X = df[["page"]]
+    y = df["price"]
 
-input_title = st.number_input(
-    "Title Length",
-    min_value=1,
-    max_value=200,
-    value=20,
-    key="ml_title_input"
-)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-if st.button("Predict Price", key="predict_btn"):
-    prediction = predict_price(input_page, input_title)
-    st.success(f"Predicted price: {prediction:.2f} £")
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    preds = model.predict(X_test)
+
+    mae = mean_absolute_error(y_test, preds)
+    r2 = r2_score(y_test, preds)
+
+    m1, m2 = st.columns(2)
+
+    kpi(m1, "📉 MAE", f"{mae:.2f}")
+    kpi(m2, "📊 R² Score", f"{r2:.2f}")
+
+    st.caption("Simple regression model predicting price from page index.")
 
 # =========================
-# DATA TABLE
+# TABLE + EXPORT
 # =========================
 st.markdown("## 📄 Data")
 
-st.dataframe(df_filtered)
+st.dataframe(df_filtered, use_container_width=True)
 
 csv = df_filtered.to_csv(index=False).encode("utf-8")
-
-st.download_button(
-    "📥 Download CSV",
-    csv,
-    "books_filtered.csv",
-    key="download_btn"
-)
+st.download_button("📥 Download CSV", csv, "books_filtered.csv")
 
 # =========================
 # INSIGHTS
@@ -212,8 +246,8 @@ st.download_button(
 st.markdown("## 🧠 Insights")
 
 st.write(f"""
-- Average price: **{df_filtered['price'].mean():.2f} £**
-- Highest price: **{df_filtered['price'].max():.2f} £**
-- Lowest price: **{df_filtered['price'].min():.2f} £**
-- Total books: **{len(df_filtered)}**
+- 📊 Average price: **{df_filtered['price'].mean():.2f} £**
+- 📈 Highest price: **{df_filtered['price'].max():.2f} £**
+- 📉 Lowest price: **{df_filtered['price'].min():.2f} £**
+- 📦 Total books: **{len(df_filtered)}**
 """)
