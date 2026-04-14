@@ -5,10 +5,6 @@ import numpy as np
 from datetime import datetime
 
 from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 
@@ -16,12 +12,12 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="📊 Book Analytics PRO",
+    page_title="📊 Book Analytics",
     layout="wide"
 )
 
 # =========================
-# STYLE PRO
+# STYLE (PRO UI)
 # =========================
 st.markdown("""
 <style>
@@ -91,30 +87,30 @@ df["title_length"] = df["title"].astype(str).apply(len)
 # HEADER
 # =========================
 st.title("📚 Book Analytics Dashboard PRO")
-st.markdown("🚀 Pipeline CI/CD + Data Engineering + Machine Learning")
+st.markdown("🚀 End-to-End Data Pipeline + Machine Learning Dashboard")
 
 # =========================
-# CONTEXTE
+# CONTEXT (INTERVIEW READY)
 # =========================
 st.markdown("""
-### 📊 Contexte
-Analyse des prix de livres scrapés automatiquement.
+### 📊 Context
+This dashboard analyzes book prices collected through automated web scraping.
 
 ### ⚙️ Pipeline
-- Scraping automatisé
-- Transformation Bronze → Silver → Gold
-- CI/CD GitHub Actions
+- Automated scraping  
+- Bronze → Silver → Gold transformation  
+- CI/CD with GitHub Actions  
 
-### 🎯 Objectif
-Analyser les prix + prédire les tendances.
+### 🎯 Objective
+Analyze pricing patterns and predict book prices.
 """)
 
 st.markdown("---")
 
 # =========================
-# RAW DATA
+# DATA PREVIEW
 # =========================
-with st.expander("📊 Aperçu des données"):
+with st.expander("📊 Raw Data Preview"):
     st.dataframe(df.head(20))
 
 # =========================
@@ -126,7 +122,7 @@ min_price = float(df["price"].min())
 max_price = float(df["price"].max())
 
 if min_price == max_price:
-    st.sidebar.warning("⚠️ Tous les prix sont identiques")
+    st.sidebar.warning("⚠️ All prices are identical")
     price_range = (min_price, max_price)
 else:
     price_range = st.sidebar.slider(
@@ -137,7 +133,7 @@ else:
     )
 
 # =========================
-# FILTER
+# FILTER DATA
 # =========================
 df_filtered = df[
     (df["price"] >= price_range[0]) &
@@ -145,7 +141,7 @@ df_filtered = df[
 ]
 
 # =========================
-# REFRESH
+# REFRESH BUTTON
 # =========================
 colA, colB = st.columns([4,1])
 
@@ -158,13 +154,13 @@ with colB:
         st.session_state.last_refresh = datetime.now()
         st.rerun()
 
-    st.caption(f"⏱ {st.session_state.last_refresh.strftime('%H:%M:%S')}")
+    st.caption(f"⏱ Last refresh: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
 
 # =========================
-# EMPTY CHECK
+# EMPTY STATE
 # =========================
 if df_filtered.empty:
-    st.warning("⚠️ Aucun résultat")
+    st.warning("⚠️ No results for selected filters")
     st.stop()
 
 # =========================
@@ -174,8 +170,8 @@ k1, k2, k3, k4 = st.columns(4)
 
 k1.metric("📦 Books", len(df_filtered))
 k2.metric("💰 Avg Price", f"{df_filtered['price'].mean():.2f} £")
-k3.metric("📈 Max", f"{df_filtered['price'].max():.2f} £")
-k4.metric("📉 Min", f"{df_filtered['price'].min():.2f} £")
+k3.metric("📈 Max Price", f"{df_filtered['price'].max():.2f} £")
+k4.metric("📉 Min Price", f"{df_filtered['price'].min():.2f} £")
 
 st.markdown("---")
 
@@ -185,12 +181,12 @@ st.markdown("---")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📊 Distribution")
+    st.subheader("📊 Price Distribution")
     fig1 = px.histogram(df_filtered, x="price", nbins=30)
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
-    st.subheader("📈 Boxplot")
+    st.subheader("📈 Price Boxplot")
     fig2 = px.box(df_filtered, y="price")
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -220,9 +216,9 @@ r2 = r2_score(y_test, y_pred)
 
 c1, c2 = st.columns(2)
 c1.metric("📉 MAE", f"{mae:.2f} £")
-c2.metric("📊 R²", f"{r2:.2f}")
+c2.metric("📊 R² Score", f"{r2:.2f}")
 
-st.caption("Modèle basé sur RandomForest")
+st.caption("Model: Random Forest Regressor")
 
 # =========================
 # PREDICTION UI
@@ -237,7 +233,6 @@ if st.button("💡 Predict Price"):
         "page": input_page,
         "title_length": input_title
     }])
-
     prediction = model.predict(input_df)[0]
     st.success(f"Predicted price: {prediction:.2f} £")
 
@@ -245,8 +240,7 @@ if st.button("💡 Predict Price"):
 # TABLE
 # =========================
 st.markdown("---")
-st.subheader("📄 Data")
-
+st.subheader("📄 Filtered Data")
 st.dataframe(df_filtered)
 
 csv = df_filtered.to_csv(index=False).encode("utf-8")
@@ -263,8 +257,8 @@ st.download_button(
 st.markdown("## 🧠 Insights")
 
 st.write(f"""
-- 📊 Average price: **{df_filtered['price'].mean():.2f} £**
-- 📈 Highest price: **{df_filtered['price'].max():.2f} £**
-- 📉 Lowest price: **{df_filtered['price'].min():.2f} £**
-- 📦 Total books: **{len(df_filtered)}**
+- Average price: **{df_filtered['price'].mean():.2f} £**
+- Highest price: **{df_filtered['price'].max():.2f} £**
+- Lowest price: **{df_filtered['price'].min():.2f} £**
+- Total books: **{len(df_filtered)}**
 """)
