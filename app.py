@@ -6,6 +6,7 @@ from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
+from google.cloud import bigquery
 
 # =========================
 # CONFIG
@@ -113,16 +114,37 @@ div[data-testid="stDataFrame"] {
 # =========================
 # DATA
 # =========================
-@st.cache_data
+from google.cloud import bigquery
+
+@st.cache_data(ttl=300)
 def load_data():
-    df = pd.read_csv("data/silver/books_clean.csv")
-    df["price"] = pd.to_numeric(df["price"], errors="coerce")
-    df = df.dropna(subset=["price"]).copy()
-    df["title_length"] = df["title"].astype(str).str.len()
-    return df
+    try:
+        client = bigquery.Client(project="domainecareycabaneasucre")
+
+        query = """
+        SELECT *
+        FROM `domainecareycabaneasucre.books.books_agg`
+        """
+
+        df = client.query(query).to_dataframe()
+
+        # sécurité
+        if "price" in df.columns:
+            df["price"] = pd.to_numeric(df["price"], errors="coerce")
+            df = df.dropna(subset=["price"])
+
+        # feature ML optionnelle
+        if "title" in df.columns:
+            df["title_length"] = df["title"].astype(str).str.len()
+
+        return df
+
+    except Exception as e:
+        st.error("❌ Failed to load data from BigQuery")
+        st.text(str(e))
+        return pd.DataFrame()
 
 df = load_data()
-
 # =========================
 # SIDEBAR
 # =========================

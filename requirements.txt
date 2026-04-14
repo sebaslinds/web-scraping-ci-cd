@@ -7,5 +7,6 @@ plotly
 scikit-learn
 numpy
 joblib
-
-
+google-cloud-bigquery
+pandas-gbq
+pyarrow
