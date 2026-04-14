@@ -4,62 +4,71 @@ import pandas as pd
 import re
 import os
 from datetime import datetime
+import matplotlib.pyplot as plt
+
 
 def scrape_books():
-    url = "http://books.toscrape.com/"
-    response = requests.get(url)
-
-    if response.status_code != 200:
-        raise Exception("Erreur lors du scraping")
-
-    soup = BeautifulSoup(response.text, "html.parser")
-    books = soup.find_all("article", class_="product_pod")
+    base_url = "http://books.toscrape.com/catalogue/page-{}.html"
 
     data = []
 
-    for book in books:
-        title = book.h3.a["title"]
+    for page in range(1, 6):
+        print(f"Scraping page {page}...")
+        url = base_url.format(page)
 
-        price_text = book.find("p", class_="price_color").text
-        price = float(re.sub(r"[^\d.]", "", price_text))
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, "html.parser")
 
-        availability = book.find("p", class_="instock availability").text.strip()
+        books = soup.find_all("article", class_="product_pod")
 
-        data.append({
-            "title": title,
-            "price": price,
-            "availability": availability
-        })
+        for book in books:
+            title = book.h3.a["title"]
+
+            price_text = book.find("p", class_="price_color").text
+            price = float(re.sub(r"[^\d.]", "", price_text))
+
+            availability = book.find("p", class_="instock availability").text.strip()
+
+            data.append({
+                "title": title,
+                "price": price,
+                "availability": availability,
+                "page": page
+            })
 
     return pd.DataFrame(data)
 
 
 def main():
-    try:
-        print("Scraping en cours...")
+    print("Pipeline en cours...")
 
-        df = scrape_books()
+    df = scrape_books()
 
-        # Création du dossier data (important pour CI/CD)
-        os.makedirs("data", exist_ok=True)
+    # BRONZE
+    os.makedirs("data/bronze", exist_ok=True)
+    df.to_csv("data/bronze/books_raw.csv", index=False)
 
-        # Nom de fichier avec timestamp (pro)
-        filename = f"data/books_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    # SILVER
+    df_clean = df.copy()
+    df_clean["price"] = df_clean["price"].astype(float)
 
-        df.to_csv(filename, index=False)
+    os.makedirs("data/silver", exist_ok=True)
+    df_clean.to_csv("data/silver/books_clean.csv", index=False)
 
-        print(f"Fichier sauvegardé: {filename}")
+    # GOLD
+    df_gold = df_clean.groupby("availability")["price"].mean().reset_index()
 
-    except Exception as e:
-        print("Erreur dans le pipeline:", e)
+    os.makedirs("data/gold", exist_ok=True)
+    df_gold.to_csv("data/gold/books_agg.csv", index=False)
+
+    # DASHBOARD
+    df_gold.plot(kind="bar", x="availability", y="price")
+    plt.title("Average Price by Availability")
+    plt.tight_layout()
+    plt.savefig("data/gold/dashboard.png")
+
+    print("Pipeline terminé avec succès")
 
 
 if __name__ == "__main__":
     main()
-
-try:
-    df = scrape_books()
-    df.to_csv("data/books.csv", index=False)
-    print("Scraping réussi")
-except Exception as e:
-    print("Erreur dans le pipeline :", e)
