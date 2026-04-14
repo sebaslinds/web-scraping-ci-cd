@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import numpy as np
 from datetime import datetime
 
 from sklearn.model_selection import train_test_split
@@ -12,55 +11,75 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="📊 Book Analytics",
+    page_title="📊 Book Analytics Dashboard",
     layout="wide"
 )
 
 # =========================
-# STYLE (PRO UI)
+# STYLE (SaaS UI)
 # =========================
 st.markdown("""
 <style>
+
+/* GLOBAL */
 .main {
-    background-color: #0e1117;
-    color: white;
+    background: #0b0f19;
+    color: #E6EAF0;
 }
 
 .block-container {
     padding-top: 2rem;
+    max-width: 1200px;
 }
 
 /* TITLES */
-h1, h2, h3 {
-    color: #00C9A7;
+h1 {
+    font-size: 42px !important;
+    font-weight: 700;
+    color: #F9FAFB;
+}
+
+h2, h3 {
+    color: #A5B4FC;
 }
 
 /* SIDEBAR */
 section[data-testid="stSidebar"] {
-    background-color: #111827;
+    background: linear-gradient(180deg, #0f172a, #020617);
+    border-right: 1px solid #1e293b;
 }
+
 section[data-testid="stSidebar"] * {
-    color: #E5E7EB !important;
+    color: #E2E8F0 !important;
 }
 
 /* KPI CARDS */
 [data-testid="stMetric"] {
-    background: linear-gradient(135deg, #1f2937, #111827);
-    padding: 20px;
-    border-radius: 12px;
-    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 25px;
+    border-radius: 14px;
 }
 
-/* KPI LABEL */
+/* KPI TEXT */
 [data-testid="stMetricLabel"] {
-    color: #9CA3AF !important;
+    color: #94A3B8 !important;
 }
 
-/* KPI VALUE */
 [data-testid="stMetricValue"] {
-    color: #F9FAFB !important;
-    font-size: 28px !important;
-    font-weight: 700 !important;
+    color: #F8FAFC !important;
+    font-size: 30px !important;
+    font-weight: 700;
+}
+
+/* BUTTON */
+.stButton>button {
+    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    color: white;
+    border-radius: 10px;
+    padding: 8px 16px;
+    border: none;
+    font-weight: 600;
 }
 
 </style>
@@ -86,24 +105,22 @@ df["title_length"] = df["title"].astype(str).apply(len)
 # =========================
 # HEADER
 # =========================
-st.title("📚 Book Analytics Dashboard PRO")
-st.markdown("🚀 End-to-End Data Pipeline + Machine Learning Dashboard")
+st.title("📚 Book Analytics Dashboard")
 
-# =========================
-# CONTEXT (INTERVIEW READY)
-# =========================
 st.markdown("""
-### 📊 Context
-This dashboard analyzes book prices collected through automated web scraping.
+### 🚀 End-to-End Data Platform
 
-### ⚙️ Pipeline
-- Automated scraping  
-- Bronze → Silver → Gold transformation  
-- CI/CD with GitHub Actions  
-
-### 🎯 Objective
-Analyze pricing patterns and predict book prices.
+Build with:
+- Data Engineering (ETL pipeline)
+- CI/CD automation
+- Machine Learning (price prediction)
+- Interactive analytics dashboard
 """)
+
+st.markdown(
+    "<p style='color:#94A3B8'>Real-time insights from scraped book data</p>",
+    unsafe_allow_html=True
+)
 
 st.markdown("---")
 
@@ -133,7 +150,7 @@ else:
     )
 
 # =========================
-# FILTER DATA
+# FILTER
 # =========================
 df_filtered = df[
     (df["price"] >= price_range[0]) &
@@ -141,7 +158,7 @@ df_filtered = df[
 ]
 
 # =========================
-# REFRESH BUTTON
+# REFRESH
 # =========================
 colA, colB = st.columns([4,1])
 
@@ -160,12 +177,14 @@ with colB:
 # EMPTY STATE
 # =========================
 if df_filtered.empty:
-    st.warning("⚠️ No results for selected filters")
+    st.warning("⚠️ No data for selected filters")
     st.stop()
 
 # =========================
-# KPIs
+# OVERVIEW
 # =========================
+st.markdown("## 📊 Overview")
+
 k1, k2, k3, k4 = st.columns(4)
 
 k1.metric("📦 Books", len(df_filtered))
@@ -176,25 +195,24 @@ k4.metric("📉 Min Price", f"{df_filtered['price'].min():.2f} £")
 st.markdown("---")
 
 # =========================
-# CHARTS
+# ANALYTICS
 # =========================
+st.markdown("## 📈 Analytics")
+
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📊 Price Distribution")
-    fig1 = px.histogram(df_filtered, x="price", nbins=30)
+    fig1 = px.histogram(df_filtered, x="price", nbins=30, title="Price Distribution")
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
-    st.subheader("📈 Price Boxplot")
-    fig2 = px.box(df_filtered, y="price")
+    fig2 = px.box(df_filtered, y="price", title="Price Spread")
     st.plotly_chart(fig2, use_container_width=True)
 
 # =========================
 # MACHINE LEARNING
 # =========================
-st.markdown("---")
-st.markdown("## 🤖 Price Prediction Model")
+st.markdown("## 🤖 Machine Learning")
 
 features = ["page", "title_length"]
 features = [f for f in features if f in df.columns]
@@ -206,7 +224,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-model = RandomForestRegressor(n_estimators=100, random_state=42)
+model = RandomForestRegressor(n_estimators=100)
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
@@ -214,33 +232,34 @@ y_pred = model.predict(X_test)
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
-c1, c2 = st.columns(2)
-c1.metric("📉 MAE", f"{mae:.2f} £")
-c2.metric("📊 R² Score", f"{r2:.2f}")
+m1, m2 = st.columns(2)
+m1.metric("📉 MAE", f"{mae:.2f} £")
+m2.metric("📊 R² Score", f"{r2:.2f}")
 
 st.caption("Model: Random Forest Regressor")
 
 # =========================
-# PREDICTION UI
+# PREDICTION
 # =========================
-st.markdown("### 🔮 Predict a Book Price")
+st.markdown("### 🔮 Predict Price")
 
-input_page = st.number_input("Page", min_value=1, max_value=1000, value=50)
-input_title = st.number_input("Title Length", min_value=1, max_value=200, value=20)
+input_page = st.number_input("Page", 1, 1000, 50)
+input_title = st.number_input("Title Length", 1, 200, 20)
 
-if st.button("💡 Predict Price"):
-    input_df = pd.DataFrame([{
+if st.button("💡 Predict"):
+    pred_df = pd.DataFrame([{
         "page": input_page,
         "title_length": input_title
     }])
-    prediction = model.predict(input_df)[0]
+
+    prediction = model.predict(pred_df)[0]
     st.success(f"Predicted price: {prediction:.2f} £")
 
 # =========================
-# TABLE
+# DATA TABLE
 # =========================
-st.markdown("---")
-st.subheader("📄 Filtered Data")
+st.markdown("## 📄 Data")
+
 st.dataframe(df_filtered)
 
 csv = df_filtered.to_csv(index=False).encode("utf-8")
