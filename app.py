@@ -170,7 +170,7 @@ st.markdown("""
 <div class="hero">
     <h1>📚 Book Analytics</h1>
     <p style="margin:0; color:#dbeafe;">
-        Startup MVP · Web Scraping · Medallion Architecture · Analytics · ML
+        Web Scraping · Medallion Architecture · Analytics · ML
     </p>
 </div>
 """, unsafe_allow_html=True)
