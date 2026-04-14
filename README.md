@@ -108,4 +108,3 @@ Enhance ML model (Random Forest)
 👨‍💻 Author
 
 Sébastien Lindsay
-Data Engineer | Analytics | Machine Learning
