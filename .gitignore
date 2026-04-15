@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 
 # Streamlit config (local seulement)
-.streamlit/
+.streamlit/secrets.toml
 
 # Matplotlib cache
 .matplotlib/
@@ -19,3 +19,5 @@ AppData/
 
 # GCP credentials
 *.json
+
+
