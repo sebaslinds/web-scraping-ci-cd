@@ -129,7 +129,7 @@ def load_data():
             project=credentials.project_id
         )
 
-                query = """
+        query = """
         SELECT *
         FROM `domainecareycabaneasucre.books.books_agg`
         LIMIT 1000
