@@ -119,8 +119,7 @@ div[data-testid="stDataFrame"] {
 @st.cache_data(ttl=60)
 def load_data():
     try:
-        st.write("🔐 Initializing BigQuery connection...")
-
+        
         credentials = service_account.Credentials.from_service_account_info(
             st.secrets["gcp_service_account"]
         )
@@ -130,17 +129,13 @@ def load_data():
             project=credentials.project_id
         )
 
-        st.write("📡 Running query...")
-
-        query = """
+                query = """
         SELECT *
         FROM `domainecareycabaneasucre.books.books_agg`
         LIMIT 1000
         """
 
         df = client.query(query).to_dataframe()
-
-        st.success("✅ Data loaded")
 
         return df
 
